@@ -6,11 +6,11 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 import cx_Oracle
 import M3Uclass
-from crud import user_by_name, insert_user
+from crud import get_details, user_by_name, insert_user, get_details
 
 # to get a string like this run:
 # openssl rand -hex 32
@@ -54,6 +54,10 @@ class UserInDB(User):
 class UserFromForm(User):
     password: str
 
+class PersonalList(BaseModel):
+    title: str
+    value: str
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -79,7 +83,7 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-def get_user(db, username: str):
+def get_user(username: str):
     #if username in db:
     connection = app.state.db.acquire()
     result = user_by_name(connection.cursor(),username)
@@ -92,7 +96,7 @@ def get_user(db, username: str):
 
 
 def authenticate_user(fake_db, username: str, password: str):
-    user = get_user(fake_db, username)
+    user = get_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -124,7 +128,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
+    user = get_user(username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
@@ -155,7 +159,7 @@ async def register_for_access_token(form_data: UserFromForm):
         data={"sub": form_data.username}, expires_delta=access_token_expires
     )
     app.state.db.release(connection)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 @app.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -170,7 +174,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "Bearer"}
 
 @app.get("/users/me")
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
@@ -189,54 +193,27 @@ def create_pool():
 def close_pool():
   app.state.db.close()
 
-def subs_name(pr_name):
-    name = pr_name.rstrip().rstrip(')')
-    pr_subs = ({ 'fhd': 'hd', 'россия-1': 'россия 1', 'твц': 'тв центр', '5 канал': 'пятый канал',
-              'рен тв hd': 'рен тв', 'мир hd': 'мир', 'телеканал звезда': 'звезда', 'тв3 hd': 'тв-3',
-              'тв3': 'тв-3', 'пятница! hd': 'пятница', 'пятница!': 'пятница' })
-    for key in pr_subs:
-        if key in name : 
-            name = name.replace(key,pr_subs[key])
-            break
-    #print(name)
-    #pos = nm.find('hd')
-    #if (pos > 0) :
-    #    nm = nm[:pos].rstrip()
-    shift = 0
-    if '+' in name : 
-        pos = name.find('+')
-        shift = int(name[pos:])
-        name = name[:pos].rstrip('(').rstrip()
-    elif (' -' or '(-') in name : 
-        pos = name.find('-')
-        shift = int(name[pos:])
-        name = name[:pos].rstrip('(').rstrip()
-    return name, shift
-
 @app.get("/{p_name}/{dt}")
 def details(p_name: str, dt: datetime):
-  nm, shft = subs_name(p_name.lower())
   connection = app.state.db.acquire()
-  with connection.cursor() as cursor:
-    dt += timedelta(hours=shft)
-    cursor.execute('SELECT c.disp_name, pstart, pstop, title, pdesc FROM programme p JOIN channel c '
-                 'ON p.channel = c.ch_id WHERE disp_name_l = :1 AND pstart < :2 AND pstop > :3 ORDER BY pstart', 
-                 (nm, dt, dt))
-    cursor.rowfactory = lambda *args: dict(zip([d[0].lower() for d in cursor.description], args))
-    result = cursor.fetchone()
-    if (result):
-      result['pstart'] -= timedelta(hours=shft)  
-      result['pstop'] -= timedelta(hours=shft)  
+  result = get_details(connection.cursor(), p_name, dt)
   app.state.db.release(connection)
   return result
 
 @app.get("/load/")
 def load(url: Optional[str] = None):
-  #print(url)
   if url:
     with urllib.request.urlopen(url) as f:
       lines = f.readlines()
     m3u = M3Uclass.M3U(lines)
     return m3u.get_dict_arr()
   return { 'message': 'Empty URL' }
-  
+
+@app.post("/save")
+def save(per_list: List[PersonalList], current_user: User = Depends(get_current_active_user)):
+    with open('aaa.txt','w') as f:
+      f.write("#EXTM3U\n")
+      for ch in per_list:
+          f.write(f'#EXTINF:-1 ,{ch.title}\n')
+          f.write(f'{ch.value}\n')
+    return 1
