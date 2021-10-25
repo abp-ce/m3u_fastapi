@@ -211,9 +211,21 @@ def load(url: Optional[str] = None):
 
 @app.post("/save")
 def save(per_list: List[PersonalList], current_user: User = Depends(get_current_active_user)):
-    with open('aaa.txt','w') as f:
+    #print(current_user.username)
+    with open(f'../files/{current_user.username}.txt','w') as f:
       f.write("#EXTM3U\n")
       for ch in per_list:
           f.write(f'#EXTINF:-1 ,{ch.title}\n')
           f.write(f'{ch.value}\n')
     return 1
+
+@app.get('/load_personal')
+def load_personal(current_user: User = Depends(get_current_active_user)):
+    if not os.path.exists(f'../files/{current_user.username}.txt'):
+      return []
+    with open(f'../files/{current_user.username}.txt','r') as f:
+      lines = f.readlines()
+    m3u = M3Uclass.M3U(lines)
+    return m3u.get_dict_arr()
+
+

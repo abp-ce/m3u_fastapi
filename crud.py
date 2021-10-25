@@ -1,5 +1,6 @@
 import cx_Oracle
 from datetime import datetime, timedelta
+import M3Uclass
 import urllib
 
 def user_by_name(cursor, name):
