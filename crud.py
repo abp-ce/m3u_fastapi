@@ -1,7 +1,4 @@
-import cx_Oracle
 from datetime import datetime, timedelta
-import M3Uclass
-import urllib
 
 def user_by_name(cursor, name):
     cursor.execute('SELECT name, password FROM m3u_users WHERE name = :1',(name,))
