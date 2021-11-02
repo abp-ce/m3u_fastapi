@@ -28,13 +28,13 @@ app = FastAPI(dependencies=[Depends(get_db)])
 origins = [
     "https://localhost:8080",
     "http://localhost:8080",
-    "http://a.abp-te.tk:8080",
-    "https://a.abp-te.tk:8080",
+    "http://abp-oci2.tk:80",
+    "https://abp-oci2.tk:80",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[*],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
