@@ -28,6 +28,8 @@ app = FastAPI(dependencies=[Depends(get_db)])
 origins = [
     "https://localhost:8080",
     "http://localhost:8080",
+    "http://a.abp-te.tk:8080",
+    "https://a.abp-te.tk:8080",
 ]
 
 app.add_middleware(
