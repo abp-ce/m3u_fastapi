@@ -29,7 +29,7 @@ origins = [
     "https://localhost:8080",
     "http://localhost:8080",
     #"http://localhost.abp-te.tk:8080",
-    #"https://localhost.abp-te.tk:8080",
+    "https://abp-ce.github.io",
 ]
 
 app.add_middleware(
