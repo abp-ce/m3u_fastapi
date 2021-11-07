@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import urllib
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
 from pydantic import BaseModel
@@ -109,7 +110,7 @@ def load(url: Optional[str] = None):
     return m3u.get_dict_arr()
   return { 'message': 'Empty URL' }
 
-@app.post("/save")
+@app.post("/save", response_class=FileResponse)
 def save(per_list: List[PersonalList], current_user: User = Depends(get_current_active_user)):
     #print(current_user.username)
     with open(f'../files/{current_user.username}.txt','w') as f:
@@ -117,7 +118,7 @@ def save(per_list: List[PersonalList], current_user: User = Depends(get_current_
       for ch in per_list:
           f.write(f'#EXTINF:-1 ,{ch.title}\n')
           f.write(f'{ch.value}\n')
-    return 1
+    return f'../files/{current_user.username}.txt'
 
 @app.get('/load_personal')
 def load_personal(current_user: User = Depends(get_current_active_user)):
