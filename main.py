@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timedelta
 import urllib
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +11,10 @@ import cx_Oracle
 import M3Uclass
 from crud import get_details, user_by_name, insert_user
 from dependencies import User, get_current_active_user, authenticate_user, Token, get_password_hash, create_access_token
+from telebot import telebot
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
+from sqlalchemy.orm import sessionmaker
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -26,11 +30,14 @@ def get_db():
 
 app = FastAPI(dependencies=[Depends(get_db)])
 
+app.include_router(telebot.router)
+
 origins = [
     "https://localhost:8080",
     "http://localhost:8080",
     #"http://localhost.abp-te.tk:8080",
     "https://abp-ce.github.io",
+    "https://api.telegram.org"
 ]
 
 app.add_middleware(
@@ -45,6 +52,8 @@ app.add_middleware(
 def create_pool():
   app.state.db = cx_Oracle.SessionPool(user=os.getenv('ATP_USER'), password=os.getenv('ATP_PASSWORD'),
                             dsn=os.getenv('ATP_DSN'), min = 4, max = 4, increment=0, threaded=True)
+  engine = create_engine("oracle://", creator=app.state.db.acquire, poolclass=NullPool)
+  app.state.session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @app.on_event("shutdown")
 def close_pool():
