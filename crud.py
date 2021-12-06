@@ -37,7 +37,7 @@ def get_details(cursor, name, dt):
     nm, shft = subs_name(name.lower())
     dt += timedelta(hours=shft)
     cursor.execute('SELECT c.disp_name, pstart, pstop, title, pdesc FROM programme p JOIN channel c '
-                 'ON p.channel = c.ch_id WHERE disp_name_l = :1 AND pstart =< :2 AND pstop > :3 ORDER BY pstart', 
+                 'ON p.channel = c.ch_id WHERE disp_name_l = :1 AND pstart <= :2 AND pstop > :3 ORDER BY pstart', 
                  (nm, dt, dt))
     cursor.rowfactory = lambda *args: dict(zip([d[0].lower() for d in cursor.description], args))
     result = cursor.fetchone()
