@@ -12,7 +12,7 @@ def get_by_letters(db: Session, pat: str):
 
 def get_by_cat(db: Session, cat: str, tm: datetime): 
     tcat = None if cat == 'Пусто' else cat
-    return db.query(models.Channel.disp_name).join(models.Programme).filter(models.Programme.pstart < tm, 
+    return db.query(models.Channel.disp_name).join(models.Programme).filter(models.Programme.pstart <= tm, 
             models.Programme.pstop > tm, models.Programme.cat == tcat).all()
 
 def get_by_id(db: Session, id: str):
