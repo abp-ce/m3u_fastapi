@@ -106,7 +106,7 @@ def proccessTimezone(update: schemas.tgrmUpdate, res: schemas.tgrmSendMessage):
         final = get_tz_string(tz*60)
     elif update.message.location:
         user = update.message.from_
-        name = 'abp_geo'
+        name = getenv('GEONAME')
         r = requests.get(f'http://api.geonames.org/timezoneJSON?lat={update.message.location.latitude}\
             &lng={update.message.location.longitude}&username={name}')
         if r.status_code != 200:
