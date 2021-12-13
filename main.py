@@ -10,24 +10,19 @@ from pydantic import BaseModel
 import cx_Oracle
 import M3Uclass
 from crud import get_details, user_by_name, insert_user
-from dependencies import User, get_current_active_user, authenticate_user, Token, get_password_hash, create_access_token
+from schemas import Programme_Response, User, UserFromForm, PersonalList, Token
+from dependencies import get_current_active_user, authenticate_user, get_password_hash, create_access_token, get_db 
 from telebot import telebot
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-class UserFromForm(User):
-    password: str
-
-class PersonalList(BaseModel):
-    title: str
-    value: str
-
+"""
 def get_db():
     return app.state.db
-
+"""
 app = FastAPI(dependencies=[Depends(get_db)])
 
 app.include_router(telebot.router)
@@ -60,29 +55,25 @@ def close_pool():
   app.state.db.close()
 
 @app.post("/register", response_model=Token)
-async def register_for_access_token(form_data: UserFromForm):
-    connection = app.state.db.acquire()
-    result = user_by_name(connection.cursor(),form_data.username)
+async def register_for_access_token(form_data: UserFromForm, db: Session = Depends(get_db)):
+    result = user_by_name(db=db,name=form_data.username)
     if result:
-        app.state.db.release(connection)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Username {result['name']} already exists",
             headers={"WWW-Authenticate": "Bearer"},
             )
     form_data.password = get_password_hash(form_data.password)
-    insert_user(connection.cursor(),form_data)
-    connection.commit()
+    insert_user(db=db,form=form_data)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": form_data.username}, expires_delta=access_token_expires
     )
-    app.state.db.release(connection)
-    return {"access_token": access_token, "token_type": "Bearer"}
+    return Token(access_token=access_token, token_type="Bearer")
 
 @app.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password, app.state.db)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -93,7 +84,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "Bearer"}
+    return Token(access_token=access_token, token_type="Bearer")
+    #return {"access_token": access_token, "token_type": "Bearer"}
 
 @app.get("/users/me")
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
@@ -103,12 +95,9 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 async def read_own_items(current_user: User = Depends(get_current_active_user)):
     return [{"item_id": "Foo", "owner": current_user.username}]
 
-@app.get("/{p_name}/{dt}")
-def details(p_name: str, dt: datetime):
-  connection = app.state.db.acquire()
-  result = get_details(connection.cursor(), p_name, dt)
-  app.state.db.release(connection)
-  return result
+@app.get("/{p_name}/{dt}", response_model = Programme_Response)
+def details(p_name: str, dt: datetime, db: Session = Depends(get_db)):
+  return get_details(db, p_name, dt)
 
 @app.get("/load/")
 def load(url: Optional[str] = None):
@@ -121,7 +110,6 @@ def load(url: Optional[str] = None):
 
 @app.post("/save", response_class=FileResponse)
 def save(per_list: List[PersonalList], current_user: User = Depends(get_current_active_user)):
-    #print(current_user.username)
     with open(f'../files/{current_user.username}.txt','w') as f:
       f.write("#EXTM3U\n")
       for ch in per_list:

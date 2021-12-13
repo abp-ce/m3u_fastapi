@@ -1,8 +1,23 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, ForeignKey, String, DateTime, Integer, Identity
+from sqlalchemy import Column, ForeignKey, String, DateTime, Integer, Identity, CheckConstraint
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
+
+class Telebot_User(Base):
+  __tablename__ = "telebot_users"
+  chat_id = Column(Integer, primary_key=True)
+  first_name = Column(String(30), nullable=False)
+  shift =Column(Integer)
+
+class M3U_User(Base):
+  __tablename__ = "m3u_users"
+  id = Column(Integer, Identity(always= True), primary_key=True)
+  name = Column(String(30), unique=True, nullable=False)
+  email = Column(String(50), unique=True, nullable=False)
+  password = Column(String(80))
+  creation_date = Column(DateTime, nullable=False)
+  disabled = Column(String(1), CheckConstraint("disabled in ['Y','N'])"))
 
 class Channel(Base):
   __tablename__ = "channel"

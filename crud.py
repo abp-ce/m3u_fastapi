@@ -1,13 +1,16 @@
+from sqlalchemy.orm import Session
+import models
 from datetime import datetime, timedelta
+from schemas import UserFromForm
 
-def user_by_name(cursor, name):
-    cursor.execute('SELECT name, password FROM m3u_users WHERE name = :1',(name,))
-    cursor.rowfactory = lambda *args: dict(zip([d[0].lower() for d in cursor.description], args))
-    return cursor.fetchone()
+def user_by_name(db: Session, name: str):
+    return db.query(models.M3U_User.name,models.M3U_User.password).filter(models.M3U_User.name == name).first()
 
-def insert_user(cursor, form):
-    cursor.execute('INSERT INTO m3u_users(name, email, password, creation_date, disabled) VALUES ( :1, :2, :3, :4, :5)',
-        (form.username, form.email, form.password, datetime.now(), 'N',))
+def insert_user(db: Session, form: UserFromForm):
+    db_user = models.M3U_User(name=form.username,email=form.email,password=form.password,creation_date=datetime.now(),disabled='N')
+    db.add(db_user)
+    db.commit()
+    #db.refresh()
 
 def subs_name(pr_name):
     name = pr_name.rstrip().rstrip(')')
@@ -33,15 +36,14 @@ def subs_name(pr_name):
         name = name[:pos].rstrip('(').rstrip()
     return name, shift
 
-def get_details(cursor, name, dt):
+def get_details(db: Session, name: str, dt: datetime):
     nm, shft = subs_name(name.lower())
-    dt += timedelta(hours=shft)
-    cursor.execute('SELECT c.disp_name, pstart, pstop, title, pdesc FROM programme p JOIN channel c '
-                 'ON p.channel = c.ch_id WHERE disp_name_l = :1 AND pstart <= :2 AND pstop > :3 ORDER BY pstart', 
-                 (nm, dt, dt))
-    cursor.rowfactory = lambda *args: dict(zip([d[0].lower() for d in cursor.description], args))
-    result = cursor.fetchone()
-    if (result):
-      result['pstart'] -= timedelta(hours=shft)  
-      result['pstop'] -= timedelta(hours=shft)  
+    if shft: dt += timedelta(hours=shft)
+    result = db.query(models.Programme).join(models.Channel).filter(models.Programme.pstart <= dt, models.Programme.pstop > dt,
+        models.Channel.disp_name_l == nm).first()
+    result.disp_name = name
+    if result and shft:
+      result.pstart -= timedelta(hours=shft)  
+      result.pstop -= timedelta(hours=shft)  
     return result
+    
