@@ -173,7 +173,7 @@ async def telebot(update: schemas.tgrmUpdate, request: Request, response: Respon
     else:
         res = None
     #response.headers['Content-Type'] = 'application/json; charset=UTF-8'
-    res.method = 'sendMessage'
+    if res: res.method = 'sendMessage'
     #print(res.json(exclude_none=True, indent=2, ensure_ascii=False))
     return res
 
