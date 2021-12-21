@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 from . import crud
 from dependencies import get_db
 import models, schemas
-import json
+import logging
+
+logger = logging.getLogger('uvicorn.error')
 
 router = APIRouter(
     prefix="/telebot",
@@ -25,11 +27,13 @@ def get_letters(patt: str, db: Session = Depends(get_db)):
     return crud.get_by_letters(db, patt)
 
 @router.get("/category/{cat}")
-def get_category(cat: str, dt: Optional[datetime] = datetime.utcnow(), db: Session = Depends(get_db)):
+def get_category(cat: str, dt: Optional[datetime] = None, db: Session = Depends(get_db)):
+    if dt == None: dt = datetime.utcnow()
     return crud.get_by_cat(db, cat, dt)
 
 @router.get("/programme/{prm}")
-def get_programme(prm: str, dt: Optional[datetime] = datetime.utcnow(), db: Session = Depends(get_db)):
+def get_programme(prm: str, dt: Optional[datetime] = None, db: Session = Depends(get_db)):
+    if dt == None: dt = datetime.utcnow()
     return crud.get_programme(db, prm, dt)
 
 def get_timezones():
@@ -80,6 +84,7 @@ def proccessList(lst: List, ch: str, res: schemas.tgrmSendMessage):
 
 
 def proccessProg(prog: models.Programme, res: schemas.tgrmSendMessage, chc: str, shift: Optional[int] = 180):
+    logger.info(f'Time shift: {shift}')
     if prog:
         desc = prog.pdesc if prog.pdesc else 'Содержание отсутствует'
         start = prog.pstart + timedelta(minutes=shift)
@@ -123,7 +128,9 @@ def proccessTimezone(update: schemas.tgrmUpdate, res: schemas.tgrmSendMessage):
         res.reply_markup = schemas.tgrmInlineKeyboardMarkup(tag='Inline',inline_keyboard=[[schemas.tgrmInlineKeyboardButton(text='Сохранить', callback_data = f'@{user.first_name};{str(60*tz)}'),
                             schemas.tgrmInlineKeyboardButton(text='Не сохранять', callback_data = '@')]])
 
-def callback(db: Session, res: schemas.tgrmSendMessage, chc: str, dt: Optional[datetime] = datetime.utcnow()):
+def callback(db: Session, res: schemas.tgrmSendMessage, chc: str, dt: Optional[datetime] = None):
+    if dt == None: dt = datetime.utcnow()
+    logger.info(f'Datetieme: {dt}')
     if chc[0] == '$':
         proccessList(lst = crud.get_by_cat(db, chc[1:], dt), ch = '', res=res)
     elif chc[0] == '@':
