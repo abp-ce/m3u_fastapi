@@ -130,7 +130,7 @@ def proccessTimezone(update: schemas.tgrmUpdate, res: schemas.tgrmSendMessage):
 
 def callback(db: Session, res: schemas.tgrmSendMessage, chc: str, dt: Optional[datetime] = None):
     if dt == None: dt = datetime.utcnow()
-    logger.info(f'Datetieme: {dt}')
+    logger.info(f'Datetime: {dt}')
     if chc[0] == '$':
         proccessList(lst = crud.get_by_cat(db, chc[1:], dt), ch = '', res=res)
     elif chc[0] == '@':
