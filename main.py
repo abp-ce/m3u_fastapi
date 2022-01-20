@@ -32,7 +32,9 @@ origins = [
     "http://localhost:8080",
     #"http://localhost.abp-te.tk:8080",
     "https://abp-ce.github.io",
-    "https://api.telegram.org"
+    "https://api.telegram.org",
+    "http://abp-m3u.tk",
+    "https://abp-m3u.tk"
 ]
 
 app.add_middleware(
