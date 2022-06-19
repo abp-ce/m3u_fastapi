@@ -1,0 +1,66 @@
+version: '3.4'
+
+services:
+  abp-nginx:
+    image: nginx:mainline-alpine
+    container_name: abp-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - web-root:/usr/share/nginx/html
+      - ./nginx-conf:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - dhparam:/etc/ssl/certs
+    depends_on:
+      - abp-fastapi
+    #networks:
+    #  - app-network
+
+  abp-certbot:
+    image: certbot/certbot
+    container_name: abp-certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/usr/share/nginx/html
+    depends_on:
+      - abp-nginx
+    #command: certonly --webroot --webroot-path=/usr/share/nginx/html --email ap120368@gmail.com --agree-tos --no-eff-email --force-renewal -d abp-oci2.tk  -d www.abp-oci2.tk
+    command: certonly --webroot --webroot-path=/usr/share/nginx/html --email ap120368@gmail.com --agree-tos --no-eff-email --dry-run -d abp-oci2.tk  -d www.abp-oci2.tk
+
+  abp-fastapi:
+    image: abpdock/fastapi-telebot
+    #image: abpdock/fastapi_cx_oracle
+    container_name: abp-fastapi
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/project/m3u_fastapi:/app/app
+      - ~/project/files:/app/files
+      - ~/project/wallet:/opt/oracle/instantclient_21_3/network/admin
+    environment:
+      - ATP_USER=$ATP_USER
+      - ATP_PASSWORD=$ATP_PASSWORD
+      - ATP_DSN=$ATP_DSN
+      - TELEBOT=$TELEBOT
+      - GEONAME=$GEONAME
+      - MAX_WORKERS=2
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  web-root:
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/project/dhparam/
+      o: bind
+
+#networks:
+#  app-network:
+#    driver: bridge
