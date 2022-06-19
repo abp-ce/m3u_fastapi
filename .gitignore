@@ -1,5 +1,5 @@
 **/venv
 **/__pycache__
 **/files
-**/xmltv.xml
-**/m3u.sqlite
+**/*.xml
+**/*.sqlite
