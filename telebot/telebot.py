@@ -7,7 +7,7 @@ import requests
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
-import crud
+from . import crud
 import models
 import schemas
 from dependencies import get_db

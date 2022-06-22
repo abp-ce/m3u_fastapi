@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 import cx_Oracle
+from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -27,18 +28,21 @@ from telebot import telebot
 def get_db():
     return app.state.db
 """
+load_dotenv()
+
 app = FastAPI(dependencies=[Depends(get_db)])
 
 app.include_router(telebot.router)
 
 origins = [
     "https://localhost:8080",
+    "http://localhost:48080",
     "http://localhost:8080",
-    # "http://localhost.abp-te.tk:8080",
+    # "http://a.abp-te.tk:48892",
     "https://abp-ce.github.io",
     "https://api.telegram.org",
-    "http://abp-m3u.tk",
-    "https://abp-m3u.tk"
+    "http://abp-m3u.ml",
+    "https://abp-m3u.ml"
 ]
 
 app.add_middleware(
@@ -54,7 +58,10 @@ app.add_middleware(
 def create_pool():
     if DATABASE_TYPE == 'SQLITE':
         app.state.db = None
-        engine = create_engine('sqlite:///' + DATABASE_NAME)
+        engine = create_engine(
+            'sqlite:///' + DATABASE_NAME,
+            connect_args={'check_same_thread': False}
+        )
     else:
         app.state.db = cx_Oracle.SessionPool(
             user=os.getenv('ATP_USER'),

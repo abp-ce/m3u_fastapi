@@ -59,8 +59,9 @@ def get_details(db: Session, name: str, dt: datetime):
             models.Programme.pstop > dt,
             models.Channel.disp_name_l == nm
         ).first()
-    result.disp_name = name
-    if result and shft:
-        result.pstart -= timedelta(hours=shft)
-        result.pstop -= timedelta(hours=shft)
+    if result:
+        result.disp_name = name
+        if shft:
+            result.pstart -= timedelta(hours=shft)
+            result.pstop -= timedelta(hours=shft)
     return result

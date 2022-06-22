@@ -39,7 +39,7 @@ class M3U:
 
     def get_dict_arr(self):
         return [
-            {'title': ei.getName(), 'value': ei.stream} for ei in self.extinf
+            {'title': ei.get_name(), 'value': ei.stream} for ei in self.extinf
         ]
 
 
