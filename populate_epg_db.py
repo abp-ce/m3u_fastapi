@@ -48,12 +48,14 @@ def populate_epg_db(db: Session) -> None:
             ccnt += 1
             if ccnt == 1500:
                 db.add_all(cinsval)
+                db.commit()
                 cinsval.clear()
                 ccnt = 0
             elem.clear()
         if elem.tag == "programme" and event == "end":
             if flag:
                 db.add_all(cinsval)
+                db.commit()
                 flag = False
             channel = pstart = pstop = title = pdesc = cat = None
             channel = elem.attrib['channel']
@@ -77,6 +79,7 @@ def populate_epg_db(db: Session) -> None:
             pcnt += 1
             if (pcnt == 1500):
                 db.add_all(pinsval)
+                db.commit()
                 pinsval.clear()
                 pcnt = 0
             elem.clear()
