@@ -59,7 +59,7 @@ def create_pool():
     if DATABASE_TYPE == 'SQLITE':
         app.state.db = None
         engine = create_engine(
-            'sqlite:///' + DATABASE_NAME,
+            'sqlite:///../db/' + DATABASE_NAME,
             connect_args={'check_same_thread': False}
         )
     else:
