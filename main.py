@@ -5,23 +5,21 @@ from typing import List, Optional
 
 # import cx_Oracle
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
-from constants import (ACCESS_TOKEN_EXPIRE_MINUTES,
-                       DATABASE_NAME, DATABASE_TYPE)
+import M3Uclass
+from constants import ACCESS_TOKEN_EXPIRE_MINUTES, DATABASE_NAME, DATABASE_TYPE
 from crud import get_details, insert_user, user_by_name
 from dependencies import (authenticate_user, create_access_token,
                           get_current_active_user, get_db, get_password_hash)
-import M3Uclass
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from populate_epg_db import populate_epg_db
-from schemas import (PersonalList, Programme_Response, Token, User,
-                     UserFromForm)
+from schemas import PersonalList, Programme_Response, Token, User, UserFromForm
 from telebot import telebot
 
 """
@@ -38,7 +36,7 @@ origins = [
     "https://localhost:8080",
     "http://localhost:48080",
     "http://localhost:8080",
-    # "http://a.abp-te.tk:48892",
+    "http://a.abp-te.tk:48890",
     "https://abp-ce.github.io",
     "https://api.telegram.org",
     "http://abp-m3u.ml",
