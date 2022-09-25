@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 #WORKDIR /root
 # RUN rm /root/instantclient-basiclite-linux.x64-21.3.0.0.0.zip
 WORKDIR /app/app
-#COPY ./app /app
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--ssl-keyfile", "/secrets/telegram.key", "--ssl-certfile", "/secrets/telegram.pem"]
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+# COPY . ./
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--ssl-keyfile", "/secrets/telegram.key", "--ssl-certfile", "/secrets/telegram.pem"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--proxy-headers"]
