@@ -1,7 +1,7 @@
 # FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 FROM python:3.9-slim
 RUN apt update
-RUN apt install python3-dev 
+RUN apt install -y python3-dev 
 # RUN apt update && apt install -y libaio1
 COPY ./requirements.txt /app/requirements.txt
 # COPY ./prestart.sh /app/prestart.sh
