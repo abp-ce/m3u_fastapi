@@ -4,6 +4,7 @@ RUN apt update
 # RUN apt update && apt install -y libaio1
 COPY ./requirements.txt /app/requirements.txt
 # COPY ./prestart.sh /app/prestart.sh
+RUN python3 -m pip install --upgrade pip
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 # RUN wget -P /root https://download.oracle.com/otn_software/linux/instantclient/213000/instantclient-basiclite-linux.x64-21.3.0.0.0.zip
 # WORKDIR /opt/oracle
