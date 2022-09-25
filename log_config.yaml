@@ -1,0 +1,21 @@
+version: 1
+
+disable_existing_loggers: false
+
+formatters:
+  standart:
+    format: "%(asctime)s %(name)s %(levelname)s: %(message)s"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: standart
+    stream  : ext://sys.stdout
+
+loggers:
+  populate_epg_db:
+    handlers: [console]
+
+root:
+  handlers: [console]

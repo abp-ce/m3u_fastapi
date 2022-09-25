@@ -1,7 +1,9 @@
+import logging
 import os
+import time
 import xml.etree.ElementTree as Et
 from datetime import datetime, timedelta
-from urllib.request import urlretrieve
+from urllib.request import urlcleanup, urlretrieve
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -11,12 +13,15 @@ from models import Base, Channel, Programme
 
 # import cx_Oracle
 
+logger = logging.getLogger('uvicorn')
+
 
 def retrieve_file():
-    urlretrieve(FILE_URL, FILE_NAME + '.gz')
+    file_retrieved, _ = urlretrieve(FILE_URL)
     if os.path.exists(FILE_NAME):
         os.remove(FILE_NAME)
-    os.system('gunzip ' + FILE_NAME + '.gz')
+    os.system('gunzip -c ' + file_retrieved + ' > ' + FILE_NAME)
+    urlcleanup()
 
 
 def recreate_tables(db: Session) -> None:
@@ -29,6 +34,8 @@ def recreate_tables(db: Session) -> None:
 
 
 def populate_epg_db(db: Session) -> None:
+    start = time.ctime()
+    logger.info(f'Start populate epg db at {start}')
     retrieve_file()
     recreate_tables(db)
     cinsval, pinsval = [], []
@@ -85,6 +92,8 @@ def populate_epg_db(db: Session) -> None:
             elem.clear()
     db.add_all(pinsval)
     db.commit()
+    end = time.ctime()
+    logger.info(f'Finish populate epg db at {end}')
 
 
 if __name__ == "__main__":
@@ -96,4 +105,4 @@ if __name__ == "__main__":
     session = sessionmaker(autocommit=False, autoflush=False,
                            bind=engine)()
     populate_epg_db(session)
-    print("EPG was successfully populated")
+    logger.info("EPG was successfully populated")

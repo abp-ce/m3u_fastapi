@@ -1,8 +1,8 @@
-"""Creating tables
+"""Initial
 
-Revision ID: ab7f43279b8b
-Revises: 2ad5a3959821
-Create Date: 2022-06-18 19:38:47.953744
+Revision ID: 396bd5424f5c
+Revises: 
+Create Date: 2022-09-23 09:19:26.946242
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ab7f43279b8b'
-down_revision = '2ad5a3959821'
+revision = '396bd5424f5c'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -32,16 +32,17 @@ def upgrade() -> None:
     sa.Column('name', sa.String(length=30), nullable=False),
     sa.Column('email', sa.String(length=50), nullable=False),
     sa.Column('password', sa.String(length=80), nullable=True),
-    sa.Column('creation_date', sa.DateTime(), nullable=False),
+    sa.Column('creation_date', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('disabled', sa.String(length=1), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('name')
     )
     op.create_table('telebot_users',
-    sa.Column('chat_id', sa.Integer(), nullable=False),
+    sa.Column('chat_id', sa.BigInteger(), nullable=False),
     sa.Column('first_name', sa.String(length=30), nullable=False),
     sa.Column('shift', sa.Integer(), nullable=True),
+    sa.Column('creation_date', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.PrimaryKeyConstraint('chat_id')
     )
     op.create_table('programme',

@@ -3,7 +3,7 @@ import urllib
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-import cx_Oracle
+# import cx_Oracle
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,24 +56,29 @@ app.add_middleware(
 
 @app.on_event("startup")
 def create_pool():
+    app.state.db = None
     if DATABASE_TYPE == 'SQLITE':
-        app.state.db = None
         engine = create_engine(
             'sqlite:///../db/' + DATABASE_NAME,
             connect_args={'check_same_thread': False}
         )
+    # elif DATABASE_TYPE == 'POSTGRESQL':
     else:
-        app.state.db = cx_Oracle.SessionPool(
-            user=os.getenv('ATP_USER'),
-            password=os.getenv('ATP_PASSWORD'),
-            dsn=os.getenv('ATP_DSN'),
-            min=4,
-            max=4,
-            increment=0,
-            threaded=True
+        engine = create_engine(
+            os.getenv('POSTRESQL_CONNECTION_STRING')
         )
-        engine = create_engine("oracle://", creator=app.state.db.acquire,
-                               poolclass=NullPool)
+    # else:
+    #     app.state.db = cx_Oracle.SessionPool(
+    #         user=os.getenv('ATP_USER'),
+    #         password=os.getenv('ATP_PASSWORD'),
+    #         dsn=os.getenv('ATP_DSN'),
+    #         min=4,
+    #         max=4,
+    #         increment=0,
+    #         threaded=True
+    #     )
+    #     engine = create_engine("oracle://", creator=app.state.db.acquire,
+    #                            poolclass=NullPool)
     app.state.session = sessionmaker(autocommit=False, autoflush=False,
                                      bind=engine)
 

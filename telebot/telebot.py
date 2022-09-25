@@ -4,15 +4,16 @@ from os import getenv
 from typing import List, Optional
 
 import requests
-from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
-from . import crud
 import models
 import schemas
 from dependencies import get_db
+from fastapi import APIRouter, Depends, Request, Response, status
 
-logger = logging.getLogger('uvicorn.error')
+from . import crud
+
+logger = logging.getLogger('uvicorn')
 
 router = APIRouter(
     prefix="/telebot",
@@ -59,7 +60,6 @@ def get_timezones():
 
 
 def get_tz_string(shift: int):
-    # print(shift)
     ind = shift//60
     timezones = get_timezones()
     return f'Ваш часовой пояс:\n{timezones[ind-2][0]}' if (
@@ -107,10 +107,8 @@ def proccess_list(lst: List, ch: str, res: schemas.tgrmSendMessage):
                 tag='Inline',
                 inline_keyboard=[row]
             )
-            # print(res.json())
             _ = requests.post(url, data=res.json(exclude_none=True),
                               headers={'Content-Type': 'application/json'})
-            # print(r.status_code)
             text, row = '', []
         text += f'{i+1}. {l[0]}\n' if l[0] is not None else f'{i+1}. Пусто\n'
         callback_data = str(i+1) if ch == '#' else (
@@ -158,7 +156,6 @@ def proccess_prog(prog: models.Programme, res: schemas.tgrmSendMessage,
             tag='Inline',
             inline_keyboard=[row]
         )
-        # print(res.reply_markup)
     else:
         res.text += """
 ************************************
@@ -240,7 +237,6 @@ def callback(db: Session, res: schemas.tgrmSendMessage, chc: str,
             else:
                 res.text = 'Ваш часовой пояс по умолчанию - Москва'
     else:
-        # print(chc)
         if chc[0] == '<' or chc[0] == '>':
             p = chc.find(';')
             dt = datetime.strptime(chc[p+1:], '%Y-%m-%d %H:%M:%S')
@@ -262,7 +258,6 @@ def callback(db: Session, res: schemas.tgrmSendMessage, chc: str,
 async def telebot(update: schemas.tgrmUpdate, request: Request,
                   response: Response, db: Session = Depends(get_db)):
     _ = await request.json()
-    # print(json.dumps(req, indent=2, sort_keys=False))
     func_dict = {
         '/timezone': proccess_list,
         '/search': search,

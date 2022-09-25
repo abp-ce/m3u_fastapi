@@ -1,6 +1,7 @@
 from sqlalchemy import (CheckConstraint, Column, DateTime, ForeignKey,
-                        Identity, Integer, String)
+                        Identity, Integer, BigInteger, String)
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -8,9 +9,10 @@ Base = declarative_base()
 
 class Telebot_User(Base):
     __tablename__ = "telebot_users"
-    chat_id = Column(Integer, primary_key=True)
+    chat_id = Column(BigInteger, primary_key=True)
     first_name = Column(String(30), nullable=False)
     shift = Column(Integer)
+    creation_date = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class M3U_User(Base):
@@ -19,7 +21,7 @@ class M3U_User(Base):
     name = Column(String(30), unique=True, nullable=False)
     email = Column(String(50), unique=True, nullable=False)
     password = Column(String(80))
-    creation_date = Column(DateTime, nullable=False)
+    creation_date = Column(DateTime(timezone=True), server_default=func.now())
     disabled = Column(String(1), CheckConstraint("disabled in ['Y','N'])"))
 
 
